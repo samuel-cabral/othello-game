@@ -1,84 +1,152 @@
-# Turborepo starter
+# Othello Game Server
 
-This Turborepo starter is maintained by the Turborepo core team.
+A WebSocket server for the Othello (Reversi) game, built with Node.js, TypeScript, Fastify, and Socket.IO.
 
-## Using this example
+## Features
 
-Run the following command:
+- Real-time game updates using WebSocket
+- Room-based multiplayer system
+- Chat functionality
+- Game state management
+- Move validation
+- Score tracking
+- Spectator mode
 
-```sh
-npx create-turbo@latest
+## Setup
+
+1. Install dependencies:
+```bash
+pnpm install
 ```
 
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm build
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
+2. Start development server:
+```bash
 pnpm dev
 ```
 
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
+3. Build for production:
+```bash
+pnpm build
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
+4. Start production server:
+```bash
+pnpm start
 ```
 
-## Useful Links
+## WebSocket Events
 
-Learn more about the power of Turborepo:
+### Client -> Server
 
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+- `create_room`: Create a new game room
+  ```typescript
+  socket.emit('create_room', callback: (response: { success: boolean, room?: Room, error?: string }) => void)
+  ```
+
+- `join_room`: Join an existing room
+  ```typescript
+  socket.emit('join_room', {
+    roomId: string,
+    preferredColor?: 'black' | 'white'
+  }, callback: (response: { success: boolean, room?: Room, error?: string }) => void)
+  ```
+
+- `make_move`: Make a move in the game
+  ```typescript
+  socket.emit('make_move', {
+    roomId: string,
+    position: { row: number, col: number }
+  }, callback: (response: { success: boolean, error?: string }) => void)
+  ```
+
+- `forfeit`: Forfeit the current game
+  ```typescript
+  socket.emit('forfeit', roomId: string, callback: (response: { success: boolean, error?: string }) => void)
+  ```
+
+- `chat_message`: Send a chat message
+  ```typescript
+  socket.emit('chat_message', {
+    roomId: string,
+    message: string
+  }, callback: (response: { success: boolean, error?: string }) => void)
+  ```
+
+- `reset_game`: Reset the game in a room
+  ```typescript
+  socket.emit('reset_game', roomId: string, callback: (response: { success: boolean, error?: string }) => void)
+  ```
+
+- `get_rooms`: Get list of available rooms
+  ```typescript
+  socket.emit('get_rooms', callback: (response: { success: boolean, rooms?: Room[], error?: string }) => void)
+  ```
+
+### Server -> Client
+
+- `room_updated`: Sent when room state changes (moves, chat, players joining/leaving)
+  ```typescript
+  socket.on('room_updated', (room: Room) => void)
+  ```
+
+## Game Rules
+
+1. The game is played on an 8x8 board
+2. Players take turns placing pieces on the board
+3. Black moves first
+4. A valid move must capture at least one opponent's piece
+5. Captured pieces are flipped to the current player's color
+6. Game ends when:
+   - No valid moves are available for either player
+   - The board is full
+   - A player forfeits
+7. The player with the most pieces wins
+
+## Types
+
+### Room
+```typescript
+{
+  id: string;
+  players: {
+    black?: string;
+    white?: string;
+  };
+  spectators: string[];
+  gameState: GameState;
+  chat: ChatMessage[];
+}
+```
+
+### GameState
+```typescript
+{
+  board: Cell[][];
+  currentPlayer: 'black' | 'white';
+  blackScore: number;
+  whiteScore: number;
+  isGameOver: boolean;
+  winner: 'black' | 'white' | 'draw' | null;
+  lastMove: Position | null;
+}
+```
+
+### ChatMessage
+```typescript
+{
+  playerId: string;
+  message: string;
+  timestamp: number;
+}
+```
+
+## Error Handling
+
+All WebSocket events include error handling through the callback function. Possible errors include:
+- Room already exists
+- Room not found
+- Player already in a room
+- Invalid move
+- Not player's turn
+- Game is over
+- Color already taken
