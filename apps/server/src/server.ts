@@ -3,39 +3,43 @@ import { Server } from 'socket.io';
 import cors from '@fastify/cors';
 import { WebSocketHandler } from './websocket/WebSocketHandler';
 
+// Criar o servidor Fastify
 const server = fastify({
-  logger: true,
+  logger: true
 });
 
-// Enable CORS
+// Configurar CORS para HTTP
 server.register(cors, {
-  origin: true, // Allow all origins in development
+  origin: true, // Permitir todas as origens em desenvolvimento
+  credentials: true
 });
 
-// Create HTTP server
+// Criar servidor HTTP
 const httpServer = server.server;
 
-// Create Socket.IO instance
+// Criar instância do Socket.IO
 const io = new Server(httpServer, {
   cors: {
-    origin: '*', // Allow all origins in development
+    origin: '*', // Permitir todas as origens em desenvolvimento
     methods: ['GET', 'POST'],
-  },
+    credentials: true
+  }
 });
 
-// Initialize WebSocket handler
+// Inicializar o manipulador de WebSocket
 new WebSocketHandler(io);
 
-// Health check route
+// Rota de verificação de saúde
 server.get('/health', async () => {
   return { status: 'ok' };
 });
 
-// Start the server
+// Iniciar o servidor
 const start = async () => {
   try {
     await server.listen({ port: 3001, host: '0.0.0.0' });
-    console.log('Server running on port 3001');
+    console.log('🚀 Servidor rodando em http://localhost:3001');
+    console.log('👾 Servidor WebSocket está pronto');
   } catch (err) {
     server.log.error(err);
     process.exit(1);
