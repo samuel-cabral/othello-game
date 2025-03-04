@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { Room } from '@/types/game';
 import SocketClient from '@/lib/socket';
 import { GameRoom } from '@/components/game-room';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const router = useRouter();
   const [connected, setConnected] = useState(false);
   const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,6 +107,11 @@ export default function Home() {
     }
   };
 
+  // Função para entrar em uma sala
+  const handleJoinRoom = (roomId: string) => {
+    router.push(`/room/${roomId}`);
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Teste de Conexão Othello</h1>
@@ -141,7 +148,11 @@ export default function Home() {
         ) : rooms.length > 0 ? (
           <ul className="space-y-2">
             {rooms.map((room) => (
-              <li key={room.id} className="border p-3 rounded">
+              <li 
+                key={room.id} 
+                className="border p-3 rounded hover:bg-gray-100 cursor-pointer transition"
+                onClick={() => handleJoinRoom(room.id)}
+              >
                 <div>Sala ID: {room.id}</div>
                 <div className="text-sm">
                   Jogadores: {Object.values(room.players).filter(Boolean).length}/2

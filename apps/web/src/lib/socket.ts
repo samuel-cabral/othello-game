@@ -147,6 +147,10 @@ class SocketClient {
   isConnected(): boolean {
     return this.socket?.connected || false;
   }
+  
+  getSocket(): Socket | null {
+    return this.socket;
+  }
 }
 
 export default SocketClient; 
