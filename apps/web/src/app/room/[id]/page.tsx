@@ -27,7 +27,7 @@ export default function RoomPage({ params }: { params: { id: string } }) {
         // Pegar o ID do socket quando conectado
         const socket = socketClient.getSocket();
         if (socket) {
-          setPlayerId(socket.id);
+          setPlayerId(socket.id || '');
           setIsLoading(false);
         }
       } else {
