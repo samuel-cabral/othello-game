@@ -3,10 +3,11 @@
 import { GameRoom } from '@/components/game-room';
 import { useEffect, useState } from 'react';
 import SocketClient from '@/lib/socket';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
-export default function RoomPage({ params }: { params: { id: string } }) {
-  const roomId = params.id;
+export default function RoomPage() {
+  const params = useParams();
+  const roomId = params.id as string;
   const router = useRouter();
   const [playerId, setPlayerId] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
