@@ -25,20 +25,34 @@ export function GameRoom({ roomId, playerId }: GameRoomProps) {
     const handleConnect = () => {
       setIsConnected(true);
       setError(null);
-      // Attempt to rejoin room on reconnection
-      socket.joinRoom(roomId).catch((err: Error) => {
-        setError('Failed to rejoin room');
-      });
+      
+      // Attempt to join room on reconnection with a small delay
+      // to ensure socket is fully established
+      setTimeout(() => {
+        console.log("Attempting to join room after connection:", roomId);
+        socket.joinRoom(roomId).then((response) => {
+          if (!response.success) {
+            setError(response.error || 'Failed to join room');
+            setTimeout(() => router.push('/'), 2000);
+          }
+        }).catch((err: Error) => {
+          console.error("Error joining room:", err);
+          setError('Failed to join room: ' + err.message);
+          setTimeout(() => router.push('/'), 2000);
+        });
+      }, 500);
     };
 
-    const handleDisconnect = () => {
+    const handleDisconnect = (reason: string) => {
+      console.log("Socket disconnected in GameRoom:", reason);
       setIsConnected(false);
-      setError('Disconnected from server. Attempting to reconnect...');
+      setError(`Disconnected from server (${reason}). Attempting to reconnect...`);
     };
 
-    const handleConnectError = () => {
+    const handleConnectError = (error: Error) => {
+      console.error("Connect error in GameRoom:", error);
       setIsConnected(false);
-      setError('Failed to connect to server');
+      setError('Failed to connect to server: ' + error.message);
     };
 
     socketInstance.on('connect', handleConnect);
@@ -46,7 +60,22 @@ export function GameRoom({ roomId, playerId }: GameRoomProps) {
     socketInstance.on('connect_error', handleConnectError);
 
     // Initial connection status
-    setIsConnected(socketInstance.connected);
+    if (socketInstance.connected) {
+      setIsConnected(true);
+      
+      // Initial room join for already connected socket
+      console.log("Socket already connected, joining room:", roomId);
+      socket.joinRoom(roomId).then((response) => {
+        if (!response.success) {
+          setError(response.error || 'Failed to join room');
+          setTimeout(() => router.push('/'), 2000);
+        }
+      }).catch((err: Error) => {
+        console.error("Error joining room:", err);
+        setError('Failed to join room: ' + err.message);
+        setTimeout(() => router.push('/'), 2000);
+      });
+    }
 
     socket.onRoomUpdated((updatedRoom: Room) => {
       setRoom(updatedRoom);
@@ -60,18 +89,12 @@ export function GameRoom({ roomId, playerId }: GameRoomProps) {
       }
     });
 
-    // Initial room join
-    socket.joinRoom(roomId).catch((err: Error) => {
-      setError('Failed to join room');
-      setTimeout(() => router.push('/'), 2000);
-    });
-
     return () => {
       socketInstance.off('connect', handleConnect);
       socketInstance.off('disconnect', handleDisconnect);
       socketInstance.off('connect_error', handleConnectError);
       socket.removeRoomUpdatedListener();
-      socket.disconnect();
+      // We don't disconnect here to allow for navigation without losing connection
     };
   }, [roomId, playerId, router]);
 

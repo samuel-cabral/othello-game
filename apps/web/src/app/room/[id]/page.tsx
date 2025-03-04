@@ -16,30 +16,50 @@ export default function RoomPage() {
 
   useEffect(() => {
     const socketClient = SocketClient.getInstance();
+    const socket = socketClient.connect();
     
-    if (!socketClient.isConnected()) {
-      socketClient.connect();
-    }
-    
-    // Aguardar pela conexão antes de verificar o playerId
-    const checkConnection = () => {
-      if (socketClient.isConnected()) {
-        setIsConnected(true);
-        // Pegar o ID do socket quando conectado
-        const socket = socketClient.getSocket();
-        if (socket) {
-          setPlayerId(socket.id || '');
-          setIsLoading(false);
-        }
-      } else {
-        setTimeout(checkConnection, 500);
+    // Set up event listeners for connection state
+    const handleConnect = () => {
+      setIsConnected(true);
+      setPlayerId(socket.id || '');
+      setIsLoading(false);
+      setError(null);
+    };
+
+    const handleDisconnect = (reason: string) => {
+      console.log('Disconnected in room page:', reason);
+      setIsConnected(false);
+      
+      // Only show loading if it's a temporary disconnect that might recover
+      if (reason !== 'io client disconnect') {
+        setError('Disconnected from server. Attempting to reconnect...');
       }
     };
 
-    checkConnection();
+    const handleConnectError = (err: Error) => {
+      console.error('Connection error in room page:', err);
+      setIsConnected(false);
+      setError(`Connection error: ${err.message}`);
+    };
 
+    // Check initial connection state
+    if (socket.connected) {
+      setIsConnected(true);
+      setPlayerId(socket.id || '');
+      setIsLoading(false);
+    }
+
+    // Set up event listeners
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('connect_error', handleConnectError);
+
+    // Cleanup
     return () => {
-      // Não desconectamos ao sair da página para manter a conexão durante a navegação
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('connect_error', handleConnectError);
+      // Don't disconnect when navigating to maintain connection between pages
     };
   }, []);
 

@@ -34,9 +34,17 @@ class SocketClient {
       
       this.socket = io('http://localhost:3001', {
         transports: ['websocket', 'polling'],
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        timeout: 20000,
+        autoConnect: true
       });
 
       this.setupEventHandlers();
+    } else if (!this.socket.connected) {
+      // If socket exists but is not connected, attempt to reconnect
+      console.log('Socket exists but not connected. Attempting to reconnect...');
+      this.socket.connect();
     }
     return this.socket;
   }
@@ -50,10 +58,38 @@ class SocketClient {
 
     this.socket.on('disconnect', (reason) => {
       console.log('Desconectado do servidor. Motivo:', reason);
+      
+      // Handle transport close errors by attempting to reconnect with polling
+      if (reason === 'transport close' || reason === 'transport error') {
+        console.log('Tentando reconectar com fallback para polling...');
+        if (this.socket) {
+          this.socket.io.opts.transports = ['polling', 'websocket'];
+        }
+      }
     });
 
     this.socket.on('connect_error', (error) => {
       console.error('Erro de conexão:', error.message);
+      
+      // If we get a websocket error, try with polling only
+      if (error.message === 'websocket error') {
+        console.log('Erro de websocket, tentando com polling...');
+        if (this.socket) {
+          this.socket.io.opts.transports = ['polling'];
+        }
+      }
+    });
+
+    this.socket.on('reconnect_attempt', (attemptNumber) => {
+      console.log(`Tentativa de reconexão #${attemptNumber}`);
+    });
+
+    this.socket.on('reconnect', () => {
+      console.log('Reconectado ao servidor!');
+    });
+
+    this.socket.on('reconnect_error', (error) => {
+      console.error('Erro na reconexão:', error);
     });
   }
 

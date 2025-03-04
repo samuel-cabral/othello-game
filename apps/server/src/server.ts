@@ -23,7 +23,13 @@ const io = new Server(httpServer, {
     origin: '*', // Permitir todas as origens em desenvolvimento
     methods: ['GET', 'POST'],
     credentials: true
-  }
+  },
+  // Configurações adicionais para melhorar a compatibilidade e confiabilidade
+  transports: ['websocket', 'polling'],
+  pingTimeout: 30000,
+  pingInterval: 25000,
+  connectTimeout: 30000,
+  allowEIO3: true
 });
 
 // Inicializar o manipulador de WebSocket
