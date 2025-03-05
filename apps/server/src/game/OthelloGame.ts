@@ -35,6 +35,10 @@ export class OthelloGame {
     return { ...this.state };
   }
 
+  public setState(newState: GameState): void {
+    this.state = { ...newState };
+  }
+
   public isValidMove(position: Position, player: Player): boolean {
     const { row, col } = position;
 

@@ -90,9 +90,24 @@ export class RoomManager {
   public makeMove(roomId: string, playerId: string, position: Position): boolean {
     const room = this.getRoom(roomId);
     const game = new OthelloGame();
-    game.getState().board = room.gameState.board;
-    game.getState().currentPlayer = room.gameState.currentPlayer;
-
+    
+    // Properly copy the entire game state to the game instance's internal state
+    // Instead of just copying individual properties
+    const currentGameState = room.gameState;
+    // Create a deep copy of the board
+    const board = JSON.parse(JSON.stringify(currentGameState.board));
+    
+    // Set the game's state directly
+    game.setState({
+      board: board,
+      currentPlayer: currentGameState.currentPlayer,
+      blackScore: currentGameState.blackScore,
+      whiteScore: currentGameState.whiteScore,
+      isGameOver: currentGameState.isGameOver,
+      winner: currentGameState.winner,
+      lastMove: currentGameState.lastMove
+    });
+    
     // Determine player's color
     let playerColor: Player | undefined;
     if (room.players.black === playerId) playerColor = 'black';
@@ -105,13 +120,13 @@ export class RoomManager {
     }
 
     // Make sure it's the player's turn
-    if (playerColor !== room.gameState.currentPlayer) {
-      console.log(`Not ${playerColor}'s turn, current player is ${room.gameState.currentPlayer}`);
+    if (playerColor !== currentGameState.currentPlayer) {
+      console.log(`Not ${playerColor}'s turn, current player is ${currentGameState.currentPlayer}`);
       return false;
     }
 
     // Verify the cell is empty
-    if (room.gameState.board[position.row][position.col] !== null) {
+    if (currentGameState.board[position.row][position.col] !== null) {
       console.log(`Cell (${position.row},${position.col}) is already occupied!`);
       return false;
     }
@@ -128,13 +143,12 @@ export class RoomManager {
     const moveSuccess = game.makeMove(position, playerColor);
     
     if (moveSuccess) {
+      // Update the room's game state with the new game state
       room.gameState = game.getState();
       return true;
-    } else {
-      // This shouldn't happen since we checked isValidMove above
-      console.log(`Move failed for unknown reason`);
-      return false;
     }
+    
+    return false;
   }
 
   public forfeitGame(roomId: string, playerId: string): void {
