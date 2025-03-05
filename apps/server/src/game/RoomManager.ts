@@ -28,8 +28,20 @@ export class RoomManager {
   public joinRoom(roomId: string, playerId: string, preferredColor?: Player): Room {
     const room = this.getRoom(roomId);
 
-    if (this.isPlayerInAnyRoom(playerId)) {
+    // Check if player is already in THIS room
+    const isInThisRoom = 
+      room.players.black === playerId || 
+      room.players.white === playerId || 
+      room.spectators.includes(playerId);
+
+    // If player is in a different room, prevent joining multiple rooms
+    if (!isInThisRoom && this.isPlayerInAnyRoom(playerId)) {
       throw new Error('Player is already in a room');
+    }
+
+    // If player is already in this room, just return the room
+    if (isInThisRoom) {
+      return room;
     }
 
     // If player is requesting a specific color
@@ -86,32 +98,62 @@ export class RoomManager {
     if (room.players.black === playerId) playerColor = 'black';
     if (room.players.white === playerId) playerColor = 'white';
 
+    // Make sure player is in the game
     if (!playerColor) {
-      throw new Error('Player is not in this game');
+      console.log(`Player ${playerId} is not playing in this game`);
+      return false;
     }
 
+    // Make sure it's the player's turn
+    if (playerColor !== room.gameState.currentPlayer) {
+      console.log(`Not ${playerColor}'s turn, current player is ${room.gameState.currentPlayer}`);
+      return false;
+    }
+
+    // Verify the cell is empty
+    if (room.gameState.board[position.row][position.col] !== null) {
+      console.log(`Cell (${position.row},${position.col}) is already occupied!`);
+      return false;
+    }
+
+    console.log(`Attempting move at position (${position.row},${position.col}) for player ${playerColor}`);
+    
+    // Check if the move is valid (captures at least one piece)
+    if (!game.isValidMove(position, playerColor)) {
+      console.log(`Invalid move: doesn't capture any pieces`);
+      return false;
+    }
+    
+    // Make the move (which includes capturing pieces)
     const moveSuccess = game.makeMove(position, playerColor);
+    
     if (moveSuccess) {
       room.gameState = game.getState();
+      return true;
+    } else {
+      // This shouldn't happen since we checked isValidMove above
+      console.log(`Move failed for unknown reason`);
+      return false;
     }
-
-    return moveSuccess;
   }
 
   public forfeitGame(roomId: string, playerId: string): void {
     const room = this.getRoom(roomId);
     const game = new OthelloGame();
     game.getState().board = room.gameState.board;
+    game.getState().currentPlayer = room.gameState.currentPlayer;
 
     // Determine player's color
     let playerColor: Player | undefined;
     if (room.players.black === playerId) playerColor = 'black';
     if (room.players.white === playerId) playerColor = 'white';
 
+    // Make sure player is in the game
     if (!playerColor) {
       throw new Error('Player is not in this game');
     }
 
+    // The player who forfeits loses the game
     game.forfeit(playerColor);
     room.gameState = game.getState();
   }

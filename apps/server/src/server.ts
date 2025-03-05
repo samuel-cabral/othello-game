@@ -44,7 +44,10 @@ server.get('/health', async () => {
 const start = async () => {
   try {
     await server.listen({ port: 3001, host: '0.0.0.0' });
-    console.log('🚀 Servidor rodando em http://localhost:3001');
+    const networkIP = '10.0.0.170'; // Your local network IP
+    console.log('🚀 Servidor rodando em:');
+    console.log(`🖥️  Local: http://localhost:3001`);
+    console.log(`🌐 Network: http://${networkIP}:3001`);
     console.log('👾 Servidor WebSocket está pronto');
   } catch (err) {
     server.log.error(err);

@@ -1,6 +1,72 @@
-# Othello Game Server
+# Othello Game
 
-A WebSocket server for the Othello (Reversi) game, built with Node.js, TypeScript, Fastify, and Socket.IO.
+A real-time multiplayer Othello (Reversi) game built with Next.js and Socket.IO.
+
+## Project Structure
+
+- `apps/server`: Backend server using Fastify and Socket.IO
+- `apps/web`: Frontend web application using Next.js
+
+## Testing on Multiple Devices in Local Network
+
+### Step 1: Configure the Local Network IP
+
+1. Find your local network IP address:
+   ```bash
+   ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}' | head -n 1
+   ```
+   
+2. Update the IP address in these files:
+   - `apps/web/.env.local`: Update `NEXT_PUBLIC_SERVER_URL` with your local IP
+   - `apps/server/src/server.ts`: Update the `networkIP` variable with your local IP
+
+### Step 2: Start the Server
+
+```bash
+cd apps/server
+npm run dev
+```
+
+The server will start and display URLs for both local and network access.
+
+### Step 3: Start the Web Client
+
+```bash
+cd apps/web
+npm run dev
+```
+
+### Step 4: Access the Game
+
+1. On your development computer:
+   - Open a browser and go to `http://localhost:3000`
+
+2. On other devices in the same network:
+   - Open a browser and go to `http://YOUR_LOCAL_IP:3000`
+   - For example: `http://10.0.0.170:3000`
+
+3. Create a room on one device and join it from the other device
+
+## Game Rules
+
+- The goal is to have the most pieces of your color on the board at the end
+- Black always moves first
+- A valid move must capture at least one opponent piece
+- To capture: place your piece such that one or more opponent pieces are "sandwiched" between your new piece and another of your pieces
+- The game ends when neither player can make a valid move (board full or no valid moves)
+- The player with the most pieces wins
+
+## Development Commands
+
+```bash
+# Start the server
+cd apps/server
+npm run dev
+
+# Start the web client
+cd apps/web
+npm run dev
+```
 
 ## Features
 
@@ -88,19 +154,6 @@ pnpm start
   ```typescript
   socket.on('room_updated', (room: Room) => void)
   ```
-
-## Game Rules
-
-1. The game is played on an 8x8 board
-2. Players take turns placing pieces on the board
-3. Black moves first
-4. A valid move must capture at least one opponent's piece
-5. Captured pieces are flipped to the current player's color
-6. Game ends when:
-   - No valid moves are available for either player
-   - The board is full
-   - A player forfeits
-7. The player with the most pieces wins
 
 ## Types
 

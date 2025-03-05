@@ -32,7 +32,11 @@ class SocketClient {
     if (!this.socket) {
       console.log('Tentando conectar ao servidor WebSocket...');
       
-      this.socket = io('http://localhost:3001', {
+      // Using network IP instead of localhost to allow connections from other devices
+      const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://10.0.0.170:3001';
+      console.log(`Connecting to server at: ${SERVER_URL}`);
+      
+      this.socket = io(SERVER_URL, {
         transports: ['websocket', 'polling'],
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
@@ -137,7 +141,7 @@ class SocketClient {
         resolve({ success: false, error: 'Não conectado ao servidor' });
         return;
       }
-      this.socket.emit('forfeit_game', { roomId }, resolve);
+      this.socket.emit('forfeit', roomId, resolve);
     });
   }
 
@@ -147,7 +151,7 @@ class SocketClient {
         resolve({ success: false, error: 'Não conectado ao servidor' });
         return;
       }
-      this.socket.emit('reset_game', { roomId }, resolve);
+      this.socket.emit('reset_game', roomId, resolve);
     });
   }
 
@@ -157,7 +161,7 @@ class SocketClient {
         resolve({ success: false, error: 'Não conectado ao servidor' });
         return;
       }
-      this.socket.emit('send_message', { roomId, message }, resolve);
+      this.socket.emit('chat_message', { roomId, message }, resolve);
     });
   }
 

@@ -7,12 +7,29 @@ import { useRouter, useParams } from 'next/navigation';
 
 export default function RoomPage() {
   const params = useParams();
+  const searchParams = new URLSearchParams(window.location.search);
+  const isCreator = searchParams.get('created') === 'true';
   const roomId = params.id as string;
   const router = useRouter();
   const [playerId, setPlayerId] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  // Add beforeunload event listener to warn before leaving
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isConnected) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isConnected]);
 
   useEffect(() => {
     const socketClient = SocketClient.getInstance();
@@ -64,13 +81,32 @@ export default function RoomPage() {
   }, []);
 
   const handleBackToLobby = () => {
+    if (isConnected) {
+      setShowExitConfirm(true);
+    } else {
+      router.push('/');
+    }
+  };
+
+  const confirmExit = () => {
     router.push('/');
+  };
+
+  const cancelExit = () => {
+    setShowExitConfirm(false);
   };
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <p className="text-xl mb-4">Conectando ao servidor...</p>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 mb-4"></div>
+            <p className="text-xl font-semibold">
+              {isCreator ? 'Preparando sua sala de jogo...' : 'Conectando à sala...'}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -90,21 +126,36 @@ export default function RoomPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Sala de Jogo: {roomId}</h1>
-        <button
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-          onClick={handleBackToLobby}
-        >
-          Voltar ao Lobby
-        </button>
-      </div>
-      
-      {isConnected && playerId ? (
-        <GameRoom roomId={roomId} playerId={playerId} />
-      ) : (
-        <p>Conectando ao servidor...</p>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <GameRoom 
+        roomId={roomId} 
+        playerId={playerId} 
+        isCreator={isCreator}
+        onBackToLobby={handleBackToLobby}
+      />
+
+      {/* Exit Confirmation Modal */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">Sair da sala?</h3>
+            <p className="mb-6">Você tem certeza que deseja sair? Se você é um jogador, isso pode afetar o jogo.</p>
+            <div className="flex justify-end space-x-3">
+              <button 
+                onClick={cancelExit}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmExit}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

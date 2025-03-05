@@ -1,169 +1,135 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Room } from '@/types/game';
-import SocketClient from '@/lib/socket';
-import { GameRoom } from '@/components/game-room';
 import { useRouter } from 'next/navigation';
+import SocketClient from '@/lib/socket';
+import { ThemeSwitcher } from '@/components/ui/theme-switcher';
 
 export default function Home() {
   const router = useRouter();
-  const [connected, setConnected] = useState(false);
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [socketId, setSocketId] = useState<string | null>(null);
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [roomIdInput, setRoomIdInput] = useState('');
 
   useEffect(() => {
     const socket = SocketClient.getInstance();
     const socketInstance = socket.connect();
-
-    const checkConnection = () => {
-      const isConnected = socket.isConnected();
-      setConnected(isConnected);
-      if (isConnected && socketInstance.id) {
+    
+    const handleConnect = () => {
+      console.log('Connected to server with ID:', socketInstance.id);
+      if (socketInstance.id) {
         setSocketId(socketInstance.id);
       }
     };
 
-    // Verificar conexão inicial
-    checkConnection();
+    // Adicionar listener para evento 'connect'
+    socketInstance.on('connect', handleConnect);
 
-    // Configurar ouvintes de eventos
-    socketInstance.on('connect', () => {
-      setError(null);
-      checkConnection();
-      fetchRooms();
-    });
-
-    socketInstance.on('disconnect', () => {
-      setConnected(false);
-      setError('Desconectado do servidor. Tentando reconectar...');
-    });
-
-    socketInstance.on('connect_error', (err) => {
-      setConnected(false);
-      setError(`Erro de conexão: ${err.message}`);
-    });
-
-    // Buscar salas disponíveis
-    const fetchRooms = async () => {
-      try {
-        const result = await socket.getRooms();
-        if (result.success && result.rooms) {
-          setRooms(result.rooms);
-        } else if (result.error) {
-          setError(`Erro ao buscar salas: ${result.error}`);
-        }
-        setLoading(false);
-      } catch (err) {
-        setError('Erro ao buscar salas');
-        setLoading(false);
-      }
-    };
-
-    // Tentar buscar salas se estiver conectado
-    if (socket.isConnected()) {
-      fetchRooms();
-    } else {
-      setLoading(false);
+    // Se já estiver conectado, atualizar o socketId
+    if (socketInstance.connected && socketInstance.id) {
+      setSocketId(socketInstance.id);
     }
 
-    // Configurar intervalo para verificar conexão
-    const intervalId = setInterval(() => {
-      checkConnection();
-      if (socket.isConnected()) {
-        fetchRooms();
-      }
-    }, 5000);
-
+    // Cleanup on component unmount
     return () => {
-      clearInterval(intervalId);
-      socketInstance.off('connect');
-      socketInstance.off('disconnect');
-      socketInstance.off('connect_error');
+      socketInstance.off('connect', handleConnect);
     };
   }, []);
 
-  // Função para criar uma sala
   const handleCreateRoom = async () => {
     try {
+      setIsCreatingRoom(true);
       setError(null);
-      const socket = SocketClient.getInstance();
-      const result = await socket.createRoom();
+      
+      const socketClient = SocketClient.getInstance();
+      const result = await socketClient.createRoom();
       
       if (result.success) {
-        alert(`Sala criada com sucesso! ID: ${result.room.id}`);
-        // Atualizar lista de salas
-        const roomsResult = await socket.getRooms();
-        if (roomsResult.success) {
-          setRooms(roomsResult.rooms);
-        }
+        // Redirecionar para a sala com parâmetro de consulta indicando que é o criador
+        router.push(`/room/${result.room.id}?created=true`);
       } else {
         setError(result.error || 'Erro ao criar sala');
+        setIsCreatingRoom(false);
       }
     } catch (err) {
-      setError('Erro ao criar sala');
+      setError((err as Error).message || 'Erro ao criar sala');
+      setIsCreatingRoom(false);
     }
   };
 
-  // Função para entrar em uma sala
-  const handleJoinRoom = (roomId: string) => {
-    router.push(`/room/${roomId}`);
+  const handleJoinRoom = () => {
+    if (!roomIdInput.trim()) {
+      setError('Por favor, insira um ID de sala válido');
+      return;
+    }
+    
+    router.push(`/room/${roomIdInput.trim()}`);
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Teste de Conexão Othello</h1>
-      
-      <div className="bg-gray-100 p-4 rounded mb-4">
-        <h2 className="font-semibold mb-2">Status da Conexão:</h2>
-        {connected ? (
-          <div className="text-green-600">
-            Conectado ao servidor
-            {socketId && <div className="text-sm">ID do Socket: {socketId}</div>}
-          </div>
-        ) : (
-          <div className="text-red-600">
-            Não conectado ao servidor
-            {error && <div className="text-sm mt-1">{error}</div>}
-          </div>
-        )}
+    <main className="flex min-h-screen flex-col items-center justify-center p-6">
+      <div className="absolute top-4 right-4">
+        <ThemeSwitcher />
       </div>
-
-      <div className="mb-4">
+      
+      <h1 className="text-4xl font-bold text-center mb-8">Othello Game</h1>
+      
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 max-w-md">
+          <p>{error}</p>
+        </div>
+      )}
+      
+      <div className="w-full max-w-md space-y-6">
         <button
           onClick={handleCreateRoom}
-          disabled={!connected}
-          className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-gray-400"
+          disabled={isCreatingRoom}
+          className="w-full py-3 px-4 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center justify-center disabled:bg-emerald-400"
         >
-          Criar Nova Sala
+          {isCreatingRoom ? (
+            <>
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Criando sala...
+            </>
+          ) : (
+            'Criar Nova Sala'
+          )}
         </button>
+        
+        <div className="flex items-center">
+          <div className="flex-grow h-px bg-gray-300 dark:bg-gray-700"></div>
+          <span className="px-3 text-gray-500 dark:text-gray-400 text-sm">OU</span>
+          <div className="flex-grow h-px bg-gray-300 dark:bg-gray-700"></div>
+        </div>
+        
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={roomIdInput}
+            onChange={(e) => setRoomIdInput(e.target.value)}
+            placeholder="Digite o ID da sala"
+            className="flex-1 py-3 px-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+          <button
+            onClick={handleJoinRoom}
+            className="py-3 px-6 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Entrar
+          </button>
+        </div>
       </div>
-
-      <div>
-        <h2 className="font-semibold mb-2">Salas Disponíveis:</h2>
-        {loading ? (
-          <p>Carregando salas...</p>
-        ) : rooms.length > 0 ? (
-          <ul className="space-y-2">
-            {rooms.map((room) => (
-              <li 
-                key={room.id} 
-                className="border p-3 rounded hover:bg-gray-100 cursor-pointer transition"
-                onClick={() => handleJoinRoom(room.id)}
-              >
-                <div>Sala ID: {room.id}</div>
-                <div className="text-sm">
-                  Jogadores: {Object.values(room.players).filter(Boolean).length}/2
-                </div>
-              </li>
-            ))}
-          </ul>
+      
+      <p className="mt-12 text-sm text-gray-600 dark:text-gray-400">
+        {socketId ? (
+          <span>Conectado ao servidor. ID: {socketId.substring(0, 8)}...</span>
         ) : (
-          <p>Nenhuma sala disponível</p>
+          <span>Conectando ao servidor...</span>
         )}
-      </div>
-    </div>
+      </p>
+    </main>
   );
 }
