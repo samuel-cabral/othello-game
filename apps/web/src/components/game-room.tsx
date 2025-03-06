@@ -445,9 +445,23 @@ export const GameRoom: React.FC<GameRoomProps> = ({
                 <div className="text-2xl font-bold mt-1">{room?.gameState.whiteScore || 0}</div>
               </div>
             </div>
+
+            {/* Exibição do vencedor */}
+            {room?.gameState.isGameOver && (
+              <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <h3 className="text-lg font-bold text-green-800 dark:text-green-300 mb-2">
+                  Fim de Jogo!
+                </h3>
+                <p className="text-green-700 dark:text-green-400">
+                  {room.gameState.winner === 'draw' 
+                    ? 'Empate!' 
+                    : `Vencedor: ${room.gameState.winner === 'black' ? 'Pretas' : 'Brancas'}!`}
+                </p>
+              </div>
+            )}
           </div>
 
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 shadow-sm mb-4">
             <h2 className="text-xl font-bold mb-2">Jogadores</h2>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -474,8 +488,18 @@ export const GameRoom: React.FC<GameRoomProps> = ({
               </div>
             </div>
           </div>
-          
-          {/* Adicionar mais informações ou controles do jogo aqui */}
+
+          {/* Chat Component */}
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+            <h2 className="text-xl font-bold mb-4">Chat</h2>
+            <div className="w-full">
+              <Chat 
+                messages={room?.chat || []} 
+                onSendMessage={handleSendMessage}
+                playerId={playerId}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

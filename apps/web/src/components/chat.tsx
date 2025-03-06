@@ -21,8 +21,9 @@ export function Chat({ messages, onSendMessage, playerId }: ChatProps) {
   };
 
   return (
-    <div className="w-full max-w-md border rounded-lg shadow-sm bg-white dark:bg-gray-800">
-      <div className="h-64 overflow-y-auto p-4 space-y-4">
+    <div className="flex flex-col h-[400px] bg-white dark:bg-gray-800 rounded-lg">
+      {/* Messages container */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, index) => (
           <div
             key={index}
@@ -35,7 +36,7 @@ export function Chat({ messages, onSendMessage, playerId }: ChatProps) {
                   : 'bg-gray-100 dark:bg-gray-700'
               }`}
             >
-              <p className="text-sm">{msg.message}</p>
+              <p className="text-sm break-words">{msg.message}</p>
               <p className="text-xs opacity-75 mt-1">
                 {new Date(msg.timestamp).toLocaleTimeString()}
               </p>
@@ -43,21 +44,26 @@ export function Chat({ messages, onSendMessage, playerId }: ChatProps) {
           </div>
         ))}
       </div>
-      <form onSubmit={handleSubmit} className="border-t p-4">
+
+      {/* Message input form */}
+      <form onSubmit={handleSubmit} className="border-t border-gray-200 dark:border-gray-700 p-4 mt-auto">
         <div className="flex gap-2">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+            placeholder="Digite uma mensagem..."
+            className="flex-1 min-w-0 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                     focus:outline-none focus:ring-2 focus:ring-blue-500 
+                     bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           />
           <button
             type="submit"
             disabled={!newMessage.trim()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 
+                     disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
           >
-            Send
+            Enviar
           </button>
         </div>
       </form>
