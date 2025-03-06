@@ -44,7 +44,21 @@ server.get('/health', async () => {
 const start = async () => {
   try {
     await server.listen({ port: 3001, host: '0.0.0.0' });
-    const networkIP = '10.0.0.170'; // Your local network IP
+    
+    // Get the local network IP dynamically if possible
+    const networkInterfaces = require('os').networkInterfaces();
+    let networkIP = 'localhost';
+    
+    // Try to find a non-internal IPv4 address
+    Object.keys(networkInterfaces).forEach((interfaceName) => {
+      const interfaces = networkInterfaces[interfaceName];
+      interfaces.forEach((iface: { family: string; internal: boolean; address: string }) => {
+        if (iface.family === 'IPv4' && !iface.internal) {
+          networkIP = iface.address;
+        }
+      });
+    });
+    
     console.log('🚀 Servidor rodando em:');
     console.log(`🖥️  Local: http://localhost:3001`);
     console.log(`🌐 Network: http://${networkIP}:3001`);

@@ -32,15 +32,15 @@ class SocketClient {
     if (!this.socket) {
       console.log('Tentando conectar ao servidor WebSocket...');
       
-      // Using network IP instead of localhost to allow connections from other devices
-      const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://10.0.0.170:3001';
+      // Get the server URL from environment or fallback to localhost
+      const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001';
       console.log(`Connecting to server at: ${SERVER_URL}`);
       
       this.socket = io(SERVER_URL, {
         transports: ['websocket', 'polling'],
-        reconnectionAttempts: 5,
+        reconnectionAttempts: 10,
         reconnectionDelay: 1000,
-        timeout: 20000,
+        timeout: 30000, // Match server timeout
         autoConnect: true
       });
 
@@ -57,15 +57,15 @@ class SocketClient {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('Conectado ao servidor! ID:', this.socket?.id);
+      console.log('Connected to server! Socket ID:', this.socket?.id);
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('Desconectado do servidor. Motivo:', reason);
+      console.log('Disconnected from server. Reason:', reason);
       
       // Handle transport close errors by attempting to reconnect with polling
       if (reason === 'transport close' || reason === 'transport error') {
-        console.log('Tentando reconectar com fallback para polling...');
+        console.log('Attempting to reconnect with fallback to polling...');
         if (this.socket) {
           this.socket.io.opts.transports = ['polling', 'websocket'];
         }
@@ -73,15 +73,27 @@ class SocketClient {
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('Erro de conexão:', error.message);
+      console.error('Connection error:', error);
+      console.error('Error message:', error.message);
+      console.error('Error type:', (error as SocketError).type);
+      console.error('Error description:', (error as SocketError).description);
       
       // If we get a websocket error, try with polling only
-      if (error.message === 'websocket error') {
-        console.log('Erro de websocket, tentando com polling...');
+      if (error.message.includes('websocket')) {
+        console.log('Websocket error detected, trying with polling...');
         if (this.socket) {
           this.socket.io.opts.transports = ['polling'];
         }
       }
+      
+      // If we can't connect at all, try a different approach
+      setTimeout(() => {
+        if (this.socket && !this.socket.connected) {
+          console.log('Still not connected after error, trying different transport strategy...');
+          this.socket.io.opts.transports = ['polling'];
+          this.socket.connect();
+        }
+      }, 3000);
     });
 
     this.socket.on('reconnect_attempt', (attemptNumber) => {

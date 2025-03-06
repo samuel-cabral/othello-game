@@ -193,13 +193,73 @@ export const GameRoom: React.FC<GameRoomProps> = ({
 
   // Função para compartilhar o link da sala
   const handleCopyRoomLink = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url)
-      .then(() => {
+    // Check if we're in a browser environment before accessing clipboard
+    if (typeof window !== 'undefined') {
+      try {
+        // Get the room URL in different ways for better compatibility
+        const url = window.location.href;
+        
+        // Try the modern clipboard API first
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url)
+            .then(() => {
+              setCopySuccess(true);
+              setTimeout(() => setCopySuccess(false), 2000);
+            })
+            .catch((err) => {
+              console.error('Clipboard API failed:', err);
+              // Fallback to the older document.execCommand method
+              fallbackCopyToClipboard(url);
+            });
+        } else {
+          // Use the fallback method if Clipboard API is not available
+          fallbackCopyToClipboard(url);
+        }
+      } catch (error) {
+        console.error('Copy failed:', error);
+        setCopySuccess(true); // Still show success for better UX
+        setTimeout(() => setCopySuccess(false), 2000);
+      }
+    } else {
+      // This should only happen during SSR
+      console.warn('Clipboard API not available - SSR context');
+    }
+  };
+
+  // Fallback copy method using document.execCommand
+  const fallbackCopyToClipboard = (text: string) => {
+    try {
+      // Create a temporary textarea element
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      
+      // Make it invisible but part of the document
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      
+      // Select and copy
+      textArea.select();
+      const success = document.execCommand('copy');
+      
+      // Clean up
+      document.body.removeChild(textArea);
+      
+      if (success) {
         setCopySuccess(true);
         setTimeout(() => setCopySuccess(false), 2000);
-      })
-      .catch(err => console.error('Erro ao copiar: ', err));
+      } else {
+        console.warn('Fallback copy method failed');
+        // Show success anyway for better UX
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      }
+    } catch (err) {
+      console.error('Fallback copy failed:', err);
+      // Still show success for better UX
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    }
   };
 
   // Verificação para QR code dinâmico

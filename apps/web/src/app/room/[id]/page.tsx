@@ -7,15 +7,20 @@ import { useRouter, useParams } from 'next/navigation';
 
 export default function RoomPage() {
   const params = useParams();
-  const searchParams = new URLSearchParams(window.location.search);
-  const isCreator = searchParams.get('created') === 'true';
-  const roomId = params.id as string;
   const router = useRouter();
+  const roomId = params.id as string;
+  const [isCreator, setIsCreator] = useState(false);
   const [playerId, setPlayerId] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  // Handle URL params in a useEffect to ensure it only runs on the client side
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    setIsCreator(searchParams.get('created') === 'true');
+  }, []);
 
   // Add beforeunload event listener to warn before leaving
   useEffect(() => {
