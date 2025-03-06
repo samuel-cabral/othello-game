@@ -22,7 +22,7 @@ export default function RoomPage() {
     setIsCreator(searchParams.get('created') === 'true');
   }, []);
 
-  // Add beforeunload event listener to warn before leaving
+  // Adiciona um listener de evento beforeunload para avisar antes de sair
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isConnected) {
@@ -40,7 +40,7 @@ export default function RoomPage() {
     const socketClient = SocketClient.getInstance();
     const socket = socketClient.connect();
     
-    // Set up event listeners for connection state
+    // Configura listeners para estado da conexão
     const handleConnect = () => {
       setIsConnected(true);
       setPlayerId(socket.id || '');
@@ -49,39 +49,39 @@ export default function RoomPage() {
     };
 
     const handleDisconnect = (reason: string) => {
-      console.log('Disconnected in room page:', reason);
+      console.log('Desconectado na página da sala:', reason);
       setIsConnected(false);
       
-      // Only show loading if it's a temporary disconnect that might recover
+      // Mostra loading apenas se for uma desconexão temporária que pode se recuperar
       if (reason !== 'io client disconnect') {
-        setError('Disconnected from server. Attempting to reconnect...');
+        setError('Desconectado do servidor. Tentando reconectar...');
       }
     };
 
     const handleConnectError = (err: Error) => {
-      console.error('Connection error in room page:', err);
+      console.error('Erro de conexão na página da sala:', err);
       setIsConnected(false);
-      setError(`Connection error: ${err.message}`);
+      setError(`Erro de conexão: ${err.message}`);
     };
 
-    // Check initial connection state
+    // Verifica o estado inicial da conexão
     if (socket.connected) {
       setIsConnected(true);
       setPlayerId(socket.id || '');
       setIsLoading(false);
     }
 
-    // Set up event listeners
+    // Configura os event listeners
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     socket.on('connect_error', handleConnectError);
 
-    // Cleanup
+    // Limpeza
     return () => {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       socket.off('connect_error', handleConnectError);
-      // Don't disconnect when navigating to maintain connection between pages
+      // Não desconecta ao navegar para manter a conexão entre páginas
     };
   }, []);
 
@@ -139,7 +139,7 @@ export default function RoomPage() {
         onBackToLobby={handleBackToLobby}
       />
 
-      {/* Exit Confirmation Modal */}
+      {/* Modal de Confirmação de Saída */}
       {showExitConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">

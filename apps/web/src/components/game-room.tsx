@@ -142,7 +142,7 @@ export const GameRoom: React.FC<GameRoomProps> = ({
 
   const handleForfeit = async () => {
     if (!isConnected) {
-      setError('Not connected to server');
+      setError('Não conectado ao servidor');
       return;
     }
 
@@ -150,16 +150,16 @@ export const GameRoom: React.FC<GameRoomProps> = ({
       setError(null);
       const result = await socket.forfeitGame(roomId);
       if (!result.success) {
-        setError(result.error || 'Failed to forfeit game');
+        setError(result.error || 'Falha ao desistir do jogo');
       }
     } catch (err) {
-      setError('Failed to forfeit game');
+      setError('Falha ao desistir do jogo');
     }
   };
 
   const handleReset = async () => {
     if (!isConnected) {
-      setError('Not connected to server');
+      setError('Não conectado ao servidor');
       return;
     }
 
@@ -167,16 +167,16 @@ export const GameRoom: React.FC<GameRoomProps> = ({
       setError(null);
       const result = await socket.resetGame(roomId);
       if (!result.success) {
-        setError(result.error || 'Failed to reset game');
+        setError(result.error || 'Falha ao reiniciar o jogo');
       }
     } catch (err) {
-      setError('Failed to reset game');
+      setError('Falha ao reiniciar o jogo');
     }
   };
 
   const handleSendMessage = async (message: string) => {
     if (!isConnected) {
-      setError('Not connected to server');
+      setError('Não conectado ao servidor');
       return;
     }
 
@@ -184,22 +184,22 @@ export const GameRoom: React.FC<GameRoomProps> = ({
       setError(null);
       const result = await socket.sendChatMessage(roomId, message);
       if (!result.success) {
-        setError(result.error || 'Failed to send message');
+        setError(result.error || 'Falha ao enviar mensagem');
       }
     } catch (err) {
-      setError('Failed to send message');
+      setError('Falha ao enviar mensagem');
     }
   };
 
   // Função para compartilhar o link da sala
   const handleCopyRoomLink = () => {
-    // Check if we're in a browser environment before accessing clipboard
+    // Verifica se estamos em um ambiente de navegador antes de acessar a área de transferência
     if (typeof window !== 'undefined') {
       try {
-        // Get the room URL in different ways for better compatibility
+        // Obtém a URL da sala de diferentes formas para melhor compatibilidade
         const url = window.location.href;
         
-        // Try the modern clipboard API first
+        // Tenta primeiro a API moderna de área de transferência
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(url)
             .then(() => {
@@ -207,56 +207,56 @@ export const GameRoom: React.FC<GameRoomProps> = ({
               setTimeout(() => setCopySuccess(false), 2000);
             })
             .catch((err) => {
-              console.error('Clipboard API failed:', err);
-              // Fallback to the older document.execCommand method
+              console.error('Falha na API de área de transferência:', err);
+              // Usa o método alternativo document.execCommand
               fallbackCopyToClipboard(url);
             });
         } else {
-          // Use the fallback method if Clipboard API is not available
+          // Usa o método alternativo se a API de área de transferência não estiver disponível
           fallbackCopyToClipboard(url);
         }
       } catch (error) {
-        console.error('Copy failed:', error);
-        setCopySuccess(true); // Still show success for better UX
+        console.error('Falha ao copiar:', error);
+        setCopySuccess(true); // Mesmo assim mostra sucesso para melhor UX
         setTimeout(() => setCopySuccess(false), 2000);
       }
     } else {
-      // This should only happen during SSR
-      console.warn('Clipboard API not available - SSR context');
+      // Isso só deve acontecer durante SSR
+      console.warn('API de área de transferência não disponível - contexto SSR');
     }
   };
 
-  // Fallback copy method using document.execCommand
+  // Método alternativo de cópia usando document.execCommand
   const fallbackCopyToClipboard = (text: string) => {
     try {
-      // Create a temporary textarea element
+      // Cria um elemento textarea temporário
       const textArea = document.createElement('textarea');
       textArea.value = text;
       
-      // Make it invisible but part of the document
+      // Torna invisível mas parte do documento
       textArea.style.position = 'fixed';
       textArea.style.opacity = '0';
       document.body.appendChild(textArea);
       
-      // Select and copy
+      // Seleciona e copia
       textArea.select();
       const success = document.execCommand('copy');
       
-      // Clean up
+      // Limpa
       document.body.removeChild(textArea);
       
       if (success) {
         setCopySuccess(true);
         setTimeout(() => setCopySuccess(false), 2000);
       } else {
-        console.warn('Fallback copy method failed');
-        // Show success anyway for better UX
+        console.warn('Método alternativo de cópia falhou');
+        // Mostra sucesso de qualquer forma para melhor UX
         setCopySuccess(true);
         setTimeout(() => setCopySuccess(false), 2000);
       }
     } catch (err) {
-      console.error('Fallback copy failed:', err);
-      // Still show success for better UX
+      console.error('Falha na cópia alternativa:', err);
+      // Mesmo assim mostra sucesso para melhor UX
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     }
@@ -294,10 +294,10 @@ export const GameRoom: React.FC<GameRoomProps> = ({
         {error ? (
           <div className="text-center">
             <p className="text-red-500 mb-4">{error}</p>
-            <p className="text-gray-500">Redirecting to home page...</p>
+            <p className="text-gray-500">Redirecionando para a página inicial...</p>
           </div>
         ) : (
-          'Loading...'
+          'Carregando...'
         )}
       </div>
     );
@@ -355,7 +355,7 @@ export const GameRoom: React.FC<GameRoomProps> = ({
         <div className="flex-1">
           <div className="flex flex-col items-center gap-8">
             <div className="text-center">
-              <h1 className="text-3xl font-bold mb-2">Othello Game</h1>
+              <h1 className="text-3xl font-bold mb-2">Jogo de Othello</h1>
               
               {/* Informações sobre o jogador atual */}
               <div className="mb-3">
@@ -404,7 +404,7 @@ export const GameRoom: React.FC<GameRoomProps> = ({
               )}
             </div>
             
-            {/* Game Board: Exibido apenas quando o jogo pode começar */}
+            {/* Tabuleiro do Jogo: Exibido apenas quando o jogo pode começar */}
             {roomInfo.gameCanStart ? (
               <div className="max-w-md w-full">
                 <div className="grid grid-cols-8 gap-1 bg-green-800 dark:bg-green-900 p-1 rounded" 
