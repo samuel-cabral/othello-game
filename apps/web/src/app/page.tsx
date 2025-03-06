@@ -85,7 +85,7 @@ export default function Home() {
         <button
           onClick={handleCreateRoom}
           disabled={isCreatingRoom}
-          className="w-full py-3 px-4 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center justify-center disabled:bg-emerald-400"
+          className="w-full py-3 px-4 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 flex items-center justify-center disabled:bg-emerald-400"
         >
           {isCreatingRoom ? (
             <>
@@ -116,7 +116,7 @@ export default function Home() {
           />
           <button
             onClick={handleJoinRoom}
-            className="py-3 px-6 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="py-3 px-6 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Entrar
           </button>

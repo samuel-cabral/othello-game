@@ -23,7 +23,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
       <button
         onClick={() => setTheme('light')}
         className={cn(
-          "inline-flex items-center justify-center rounded-sm p-2 text-sm transition-colors hover:bg-gray-200 dark:hover:bg-gray-700",
+          "inline-flex items-center justify-center rounded-sm p-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700",
           theme === 'light' ? 'bg-white text-black shadow-sm dark:bg-gray-700 dark:text-white' : 'text-gray-500 dark:text-gray-400'
         )}
         aria-label="Tema Claro"
@@ -34,7 +34,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
       <button
         onClick={() => setTheme('dark')}
         className={cn(
-          "inline-flex items-center justify-center rounded-sm p-2 text-sm transition-colors hover:bg-gray-200 dark:hover:bg-gray-700",
+          "inline-flex items-center justify-center rounded-sm p-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700",
           theme === 'dark' ? 'bg-white text-black shadow-sm dark:bg-gray-700 dark:text-white' : 'text-gray-500 dark:text-gray-400'
         )}
         aria-label="Tema Escuro"
@@ -45,7 +45,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
       <button
         onClick={() => setTheme('system')}
         className={cn(
-          "inline-flex items-center justify-center rounded-sm p-2 text-sm transition-colors hover:bg-gray-200 dark:hover:bg-gray-700",
+          "inline-flex items-center justify-center rounded-sm p-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700",
           theme === 'system' ? 'bg-white text-black shadow-sm dark:bg-gray-700 dark:text-white' : 'text-gray-500 dark:text-gray-400'
         )}
         aria-label="Tema do Sistema"

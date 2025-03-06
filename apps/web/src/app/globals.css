@@ -16,9 +16,9 @@
   }
 }
 
-/* Adicionar transições suaves para alterações de tema */
+/* Tema sem transições para troca instantânea */
 * {
-  @apply transition-colors duration-200;
+  @apply transition-none;
 }
 
 /* Garantir que elementos básicos tenham cores corretas no modo escuro */

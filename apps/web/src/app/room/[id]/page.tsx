@@ -131,7 +131,7 @@ export default function RoomPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8">
       <GameRoom 
         roomId={roomId} 
         playerId={playerId} 

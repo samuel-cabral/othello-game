@@ -98,7 +98,7 @@ export function Board({ board, currentPlayer, isMyTurn, onMove, lastMove }: Boar
           <div
             key={`${rowIndex}-${colIndex}`}
             className={cn(
-              'w-12 h-12 bg-emerald-600 rounded-sm flex items-center justify-center cursor-pointer hover:bg-emerald-500 transition-colors',
+              'w-12 h-12 bg-emerald-600 rounded-sm flex items-center justify-center cursor-pointer hover:bg-emerald-500',
               {
                 'hover:bg-emerald-600 cursor-not-allowed': !isMyTurn || cell !== null,
                 'ring-2 ring-yellow-400': lastMove?.row === rowIndex && lastMove?.col === colIndex,
@@ -108,7 +108,7 @@ export function Board({ board, currentPlayer, isMyTurn, onMove, lastMove }: Boar
           >
             {cell && (
               <div className={cn(
-                'w-8 h-8 rounded-full transition-transform',
+                'w-8 h-8 rounded-full',
                 {
                   'bg-black': cell === 'black',
                   'bg-white': cell === 'white',
